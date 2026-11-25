@@ -1,0 +1,19 @@
+- name: Importing gpg key
+  shell: 'curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg'
+
+- name: Adding k8s repo
+  shell: 'echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /" > /etc/apt/sources.list.d/kubernetes.list'
+
+- name: Installing k8s related packages
+  ansible.builtin.apt:
+    update_cache: yes
+    pkg:
+    - kubeadm
+    - kubelet
+    - kubectl
+    state: present
+
+- name: Setting ipv4 forward
+  shell: 'echo 1 > /proc/sys/net/ipv4/ip_forward'
+
+    

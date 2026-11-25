@@ -1,0 +1,27 @@
+## Launching vm
+multipass launch -c 2 -m 6G -d 10G -n ${name}
+
+## setting ssh key on vm 
+multipass exec ${name} -- bash -c 'echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINdduPKiHNXQTKNMPpu8hJ98x0s/xkxPLiloLrD+w/fJ abiskup@BishopsNexus" > .ssh/authorized_keys'
+
+
+### k8s config
+#
+mkdir /etc/kubeadm; cd /etc/kubeadm
+kubeadm config print init-defaults > init.yaml
+kubeadm init --> default config
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+podSubnet:  --> needs to be added to kubeadm networking
+modprobe br_netfilter
+sysctl net.bridge.bridge-nf-call-iptables=1
+
+
+
+kubeadm join 192.168.2.109:6443 --token 1dvd5v.2zah5h8xqea850x0 \
+	--discovery-token-ca-cert-hash sha256:2daeeab148dfdf2321ae179d7c95f9e3b7850d3bf3534108708bde16e3ab31db
+

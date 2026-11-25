@@ -1,0 +1,68 @@
+---
+- name: Setting VMs
+  hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    
+    - name: Installing packages
+      ansible.builtin.apt:
+        update_cache: yes
+        pkg:
+        - ca-certificates 
+        - curl
+        - apt-transport-https
+        - gpg
+        state: present
+
+    - name: Setting apt keyrings
+      shell: 'install -m 0755 -d /etc/apt/keyrings'
+    
+    - name: Getting gpg key for docker
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644' 
+    
+    - name: Adding new repository
+      shell: 'echo  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
+    
+    - name: Installing additional pkgs
+      ansible.builtin.apt:
+        update_cache: yes
+        pkg:
+        - containerd.io
+        state: present
+
+    - name: Removing old config
+      ansible.builtin.file:
+        path: /etc/containerd/config.toml
+        state: absent
+
+    - name: Adding container.d config
+      ansible.builtin.blockinfile:
+        path: /etc/containerd/config.toml
+        create: true
+        block: |
+          version = 2
+
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+          runtime_type = "io.containerd.runc.v2"
+
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+          SystemdCgroup = true
+        state: present
+
+    - name: Restarting container.d
+      ansible.builtin.systemd_service:
+        name: containerd
+        state: restarted
+
+- name: Imporiting CP playbook
+  ansible.builtin.import_playbook: controlplane/main.yml
+
+- name: Importing Workers playbook
+  ansible.builtin.import_playbook: workers/main.yml
+

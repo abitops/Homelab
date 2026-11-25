@@ -1,0 +1,11 @@
+---
+- name: CP setup
+  hosts: controlplane
+  remote_user: ubuntu
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+
+    - name: Installation tasks
+      ansible.builtin.import_tasks: tasks/installation.yml

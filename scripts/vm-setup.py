@@ -82,7 +82,7 @@ for vm in k8s_control, worker_1, worker_2, worker_3:
 
 
 print("[+] Creating inventory file")
-file_path = f"{HOME_DIR}/inventory/inventory.ini" 
+file_path = f"../inventory/inventory.ini"
 
 with open(file_path, "w") as file:
     cp_header = "[controlplane]"
